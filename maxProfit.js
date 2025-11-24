@@ -66,14 +66,24 @@ function findMaxProfit(n) {
   ];
 
   // DP table: dp[time] = { profit, sequence }
-  // Stores the best solution for each time unit
+  // Stores the best solution for each time unit (finish time)
   const dp = new Array(n + 1).fill(null).map(() => ({
-    profit: 0,
+    profit: -1,
     sequence: [],
   }));
 
+  // Initialize: we can always finish at time 0 with 0 profit and no buildings
+  dp[0] = { profit: 0, sequence: [] };
+
   // Try all possible building sequences
+  // For each possible finish time from 0 to n
   for (let time = 0; time <= n; time++) {
+    // Skip if we haven't reached this state yet
+    if (dp[time].profit < 0) {
+      continue;
+    }
+
+    // Try adding each type of building
     for (const building of buildings) {
       const buildTime = building.time;
       const finishTime = time + buildTime;
@@ -85,7 +95,7 @@ function findMaxProfit(n) {
         const totalProfit = dp[time].profit + buildingProfit;
 
         // Update if this gives better profit
-        if (totalProfit > dp[finishTime].profit) {
+        if (dp[finishTime].profit < 0 || totalProfit > dp[finishTime].profit) {
           dp[finishTime] = {
             profit: totalProfit,
             sequence: [...dp[time].sequence, building],
@@ -96,14 +106,37 @@ function findMaxProfit(n) {
   }
 
   // Find the maximum profit across all finish times
-  let maxProfit = 0;
+  // When there are ties, prefer solutions that finish before n (not exactly at n)
+  let maxProfit = -1;
   let bestSequence = [];
+  let bestFinishTime = -1;
 
+  // First pass: find max profit
   for (let i = 0; i <= n; i++) {
     if (dp[i].profit > maxProfit) {
       maxProfit = dp[i].profit;
-      bestSequence = dp[i].sequence;
     }
+  }
+
+  // Second pass: among solutions with max profit, prefer those finishing before n
+  // Among those, prefer higher finish time (uses more time)
+  for (let i = n - 1; i >= 0; i--) {
+    if (dp[i].profit === maxProfit && maxProfit >= 0) {
+      bestSequence = dp[i].sequence;
+      bestFinishTime = i;
+      break; // Found the best: highest finish time < n
+    }
+  }
+
+  // If no solution finishing before n, take the one at n
+  if (bestFinishTime < 0 && dp[n].profit === maxProfit) {
+    bestSequence = dp[n].sequence;
+    bestFinishTime = n;
+  }
+
+  // If no sequence found, return empty counts
+  if (maxProfit < 0) {
+    maxProfit = 0;
   }
 
   const counts = countBuildings(bestSequence);
@@ -134,26 +167,56 @@ function solveMaxProfit(n) {
   return formatOutput(result.counts);
 }
 
-// Test cases
-console.log("Test Case 1: Time Unit = 7");
-const result1 = findMaxProfit(7);
-console.log(`Output: ${formatOutput(result1.counts)}`);
-console.log(`Earnings: $${result1.profit}`);
-console.log();
-
-console.log("Test Case 2: Time Unit = 8");
-const result2 = findMaxProfit(8);
-console.log(`Output: ${formatOutput(result2.counts)}`);
-console.log(`Earnings: $${result2.profit}`);
-console.log();
-
-console.log("Test Case 3: Time Unit = 13");
-const result3 = findMaxProfit(13);
-console.log(`Output: ${formatOutput(result3.counts)}`);
-console.log(`Earnings: $${result3.profit}`);
-console.log();
-
 // Export for use in other modules
 if (typeof module !== "undefined" && module.exports) {
   module.exports = { solveMaxProfit, findMaxProfit, formatOutput };
+}
+
+// Allow manual input from command line or run test cases
+if (require.main === module) {
+  const args = process.argv.slice(2);
+
+  // If user provides a time unit as command line argument
+  if (args.length > 0) {
+    const timeUnit = parseInt(args[0]);
+
+    if (isNaN(timeUnit) || timeUnit < 0) {
+      console.log(
+        "Error: Please provide a valid positive number for time units."
+      );
+      console.log("Usage: node maxProfit.js <time_unit>");
+      console.log("Example: node maxProfit.js 49");
+      process.exit(1);
+    }
+
+    console.log(`Time Unit: ${timeUnit}`);
+    const result = findMaxProfit(timeUnit);
+    console.log(`Output: ${formatOutput(result.counts)}`);
+    console.log(`Earnings: $${result.profit}`);
+  } else {
+    // Otherwise, run default test cases
+    console.log("Test Case 1: Time Unit = 7");
+    const result1 = findMaxProfit(7);
+    console.log(`Output: ${formatOutput(result1.counts)}`);
+    console.log(`Earnings: $${result1.profit}`);
+    console.log();
+
+    console.log("Test Case 2: Time Unit = 8");
+    const result2 = findMaxProfit(8);
+    console.log(`Output: ${formatOutput(result2.counts)}`);
+    console.log(`Earnings: $${result2.profit}`);
+    console.log();
+
+    console.log("Test Case 3: Time Unit = 13");
+    const result3 = findMaxProfit(13);
+    console.log(`Output: ${formatOutput(result3.counts)}`);
+    console.log(`Earnings: $${result3.profit}`);
+    console.log();
+
+    console.log("Test Case 4: Time Unit = 49");
+    const result4 = findMaxProfit(49);
+    console.log(`Output: ${formatOutput(result4.counts)}`);
+    console.log(`Earnings: $${result4.profit}`);
+    console.log();
+  }
 }
