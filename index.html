@@ -273,7 +273,8 @@
             <strong>Test Case 1</strong>
             <div>Time Unit: 7</div>
             <div style="font-size: 0.9em; color: #666; margin-top: 5px">
-              Expected: T: 1 P: 0 C: 0
+              Expected: 2 solutions<br />
+              (T: 1 P: 0 C: 0 or T: 0 P: 1 C: 0)
             </div>
           </div>
           <div class="test-card" onclick="runTest(8)">
@@ -358,8 +359,6 @@
         }
 
         let maxProfit = -1;
-        let bestSequence = [];
-        let bestFinishTime = -1;
 
         for (let i = 0; i <= n; i++) {
           if (dp[i].profit > maxProfit) {
@@ -367,29 +366,70 @@
           }
         }
 
-        for (let i = n - 1; i >= 0; i--) {
-          if (dp[i].profit === maxProfit && maxProfit >= 0) {
-            bestSequence = dp[i].sequence;
-            bestFinishTime = i;
-            break;
+        if (maxProfit < 0) {
+          maxProfit = 0;
+          return {
+            profit: maxProfit,
+            counts: { T: 0, P: 0, C: 0 },
+            sequence: [],
+            allSolutions: [],
+          };
+        }
+
+        // Collect all optimal solutions
+        const allSolutions = [];
+        const seenCounts = new Set();
+
+        // Collect all sequences with max profit
+        // Filter out solutions where the last building finishes exactly at time n (0 operational time)
+        for (let i = 0; i <= n; i++) {
+          if (dp[i].profit === maxProfit && dp[i].sequence.length > 0) {
+            // Skip solutions where finish time is exactly n (last building has 0 operational time)
+            // Unless it's the only solution
+            if (i === n) {
+              // Check if there are other solutions finishing before n
+              let hasOtherSolutions = false;
+              for (let j = 0; j < n; j++) {
+                if (dp[j].profit === maxProfit && dp[j].sequence.length > 0) {
+                  hasOtherSolutions = true;
+                  break;
+                }
+              }
+              // If other solutions exist, skip this one
+              if (hasOtherSolutions) continue;
+            }
+
+            const counts = countBuildings(dp[i].sequence);
+            const countsKey = `${counts.T},${counts.P},${counts.C}`;
+
+            if (!seenCounts.has(countsKey)) {
+              seenCounts.add(countsKey);
+              allSolutions.push({
+                counts: counts,
+                sequence: dp[i].sequence,
+                finishTime: i,
+              });
+            }
           }
         }
 
-        if (bestFinishTime < 0 && dp[n].profit === maxProfit) {
-          bestSequence = dp[n].sequence;
-          bestFinishTime = n;
-        }
+        // Sort solutions: prefer solutions finishing before n
+        allSolutions.sort((a, b) => {
+          if (a.finishTime < n && b.finishTime === n) return -1;
+          if (a.finishTime === n && b.finishTime < n) return 1;
+          return b.finishTime - a.finishTime;
+        });
 
-        if (maxProfit < 0) {
-          maxProfit = 0;
-        }
-
-        const counts = countBuildings(bestSequence);
+        const bestSolution =
+          allSolutions.length > 0
+            ? allSolutions[0]
+            : { counts: { T: 0, P: 0, C: 0 }, sequence: [] };
 
         return {
           profit: maxProfit,
-          counts: counts,
-          sequence: bestSequence,
+          counts: bestSolution.counts,
+          sequence: bestSolution.sequence,
+          allSolutions: allSolutions.map((sol) => sol.counts),
         };
       }
 
@@ -422,28 +462,44 @@
 
         const resultCard = document.createElement("div");
         resultCard.className = "result-card";
+
+        let solutionsHTML = "";
+        if (result.allSolutions && result.allSolutions.length > 0) {
+          if (result.allSolutions.length === 1) {
+            solutionsHTML = `
+              <div class="result-item" style="grid-column: 1 / -1;">
+                <strong>Output</strong>
+                ${formatOutput(result.allSolutions[0])}
+              </div>`;
+          } else {
+            solutionsHTML = `
+              <div class="result-item" style="grid-column: 1 / -1;">
+                <strong>Solutions</strong>
+                ${result.allSolutions
+                  .map(
+                    (sol, idx) =>
+                      `<div style="margin-top: 5px;">${idx + 1}. ${formatOutput(
+                        sol
+                      )}</div>`
+                  )
+                  .join("")}
+              </div>`;
+          }
+        } else {
+          solutionsHTML = `
+            <div class="result-item">
+              <strong>Output</strong>
+              ${formatOutput(result.counts)}
+            </div>`;
+        }
+
         resultCard.innerHTML = `
                 <div class="result-header">Time Unit: ${timeUnit}</div>
                 <div class="result-details">
-                    <div class="result-item">
-                        <strong>Output</strong>
-                        ${formatOutput(result.counts)}
-                    </div>
+                    ${solutionsHTML}
                     <div class="result-item">
                         <strong>Earnings</strong>
                         $${result.profit.toLocaleString()}
-                    </div>
-                    <div class="result-item">
-                        <strong>Theatres</strong>
-                        ${result.counts.T}
-                    </div>
-                    <div class="result-item">
-                        <strong>Pubs</strong>
-                        ${result.counts.P}
-                    </div>
-                    <div class="result-item">
-                        <strong>Commercial Parks</strong>
-                        ${result.counts.C}
                     </div>
                 </div>
             `;
