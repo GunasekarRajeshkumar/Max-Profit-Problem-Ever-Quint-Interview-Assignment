@@ -106,10 +106,7 @@ function findMaxProfit(n) {
   }
 
   // Find the maximum profit across all finish times
-  // When there are ties, prefer solutions that finish before n (not exactly at n)
   let maxProfit = -1;
-  let bestSequence = [];
-  let bestFinishTime = -1;
 
   // First pass: find max profit
   for (let i = 0; i <= n; i++) {
@@ -118,33 +115,73 @@ function findMaxProfit(n) {
     }
   }
 
-  // Second pass: among solutions with max profit, prefer those finishing before n
-  // Among those, prefer higher finish time (uses more time)
-  for (let i = n - 1; i >= 0; i--) {
-    if (dp[i].profit === maxProfit && maxProfit >= 0) {
-      bestSequence = dp[i].sequence;
-      bestFinishTime = i;
-      break; // Found the best: highest finish time < n
+  // If no sequence found, return empty
+  if (maxProfit < 0) {
+    maxProfit = 0;
+    return {
+      profit: maxProfit,
+      counts: { T: 0, P: 0, C: 0 },
+      sequence: [],
+      allSolutions: [],
+    };
+  }
+
+  // Collect all optimal solutions
+  const allSolutions = [];
+  const seenCounts = new Set();
+
+  // Collect all sequences with max profit
+  // Filter out solutions where the last building finishes exactly at time n (0 operational time)
+  for (let i = 0; i <= n; i++) {
+    if (dp[i].profit === maxProfit && dp[i].sequence.length > 0) {
+      // Skip solutions where finish time is exactly n (last building has 0 operational time)
+      // Unless it's the only solution
+      if (i === n) {
+        // Check if there are other solutions finishing before n
+        let hasOtherSolutions = false;
+        for (let j = 0; j < n; j++) {
+          if (dp[j].profit === maxProfit && dp[j].sequence.length > 0) {
+            hasOtherSolutions = true;
+            break;
+          }
+        }
+        // If other solutions exist, skip this one
+        if (hasOtherSolutions) continue;
+      }
+
+      const counts = countBuildings(dp[i].sequence);
+      const countsKey = `${counts.T},${counts.P},${counts.C}`;
+
+      // Only add unique solutions (by counts)
+      if (!seenCounts.has(countsKey)) {
+        seenCounts.add(countsKey);
+        allSolutions.push({
+          counts: counts,
+          sequence: dp[i].sequence,
+          finishTime: i,
+        });
+      }
     }
   }
 
-  // If no solution finishing before n, take the one at n
-  if (bestFinishTime < 0 && dp[n].profit === maxProfit) {
-    bestSequence = dp[n].sequence;
-    bestFinishTime = n;
-  }
+  // Sort solutions: prefer solutions finishing before n, then by finish time
+  allSolutions.sort((a, b) => {
+    if (a.finishTime < n && b.finishTime === n) return -1;
+    if (a.finishTime === n && b.finishTime < n) return 1;
+    return b.finishTime - a.finishTime; // Higher finish time first
+  });
 
-  // If no sequence found, return empty counts
-  if (maxProfit < 0) {
-    maxProfit = 0;
-  }
-
-  const counts = countBuildings(bestSequence);
+  // Use the first solution as the primary one (for backward compatibility)
+  const bestSolution =
+    allSolutions.length > 0
+      ? allSolutions[0]
+      : { counts: { T: 0, P: 0, C: 0 }, sequence: [] };
 
   return {
     profit: maxProfit,
-    counts: counts,
-    sequence: bestSequence,
+    counts: bestSolution.counts,
+    sequence: bestSolution.sequence,
+    allSolutions: allSolutions.map((sol) => sol.counts),
   };
 }
 
@@ -191,32 +228,67 @@ if (require.main === module) {
 
     console.log(`Time Unit: ${timeUnit}`);
     const result = findMaxProfit(timeUnit);
-    console.log(`Output: ${formatOutput(result.counts)}`);
     console.log(`Earnings: $${result.profit}`);
+    if (result.allSolutions && result.allSolutions.length > 0) {
+      console.log("Solutions");
+      result.allSolutions.forEach((sol, idx) => {
+        console.log(`${idx + 1}. ${formatOutput(sol)}`);
+      });
+    } else {
+      console.log(`Output: ${formatOutput(result.counts)}`);
+    }
   } else {
     // Otherwise, run default test cases
     console.log("Test Case 1: Time Unit = 7");
     const result1 = findMaxProfit(7);
-    console.log(`Output: ${formatOutput(result1.counts)}`);
     console.log(`Earnings: $${result1.profit}`);
+    if (result1.allSolutions && result1.allSolutions.length > 0) {
+      console.log("Solutions");
+      result1.allSolutions.forEach((sol, idx) => {
+        console.log(`${idx + 1}. ${formatOutput(sol)}`);
+      });
+    } else {
+      console.log(`Output: ${formatOutput(result1.counts)}`);
+    }
     console.log();
 
     console.log("Test Case 2: Time Unit = 8");
     const result2 = findMaxProfit(8);
-    console.log(`Output: ${formatOutput(result2.counts)}`);
     console.log(`Earnings: $${result2.profit}`);
+    if (result2.allSolutions && result2.allSolutions.length > 0) {
+      console.log("Solutions");
+      result2.allSolutions.forEach((sol, idx) => {
+        console.log(`${idx + 1}. ${formatOutput(sol)}`);
+      });
+    } else {
+      console.log(`Output: ${formatOutput(result2.counts)}`);
+    }
     console.log();
 
     console.log("Test Case 3: Time Unit = 13");
     const result3 = findMaxProfit(13);
-    console.log(`Output: ${formatOutput(result3.counts)}`);
     console.log(`Earnings: $${result3.profit}`);
+    if (result3.allSolutions && result3.allSolutions.length > 0) {
+      console.log("Solutions");
+      result3.allSolutions.forEach((sol, idx) => {
+        console.log(`${idx + 1}. ${formatOutput(sol)}`);
+      });
+    } else {
+      console.log(`Output: ${formatOutput(result3.counts)}`);
+    }
     console.log();
 
     console.log("Test Case 4: Time Unit = 49");
     const result4 = findMaxProfit(49);
-    console.log(`Output: ${formatOutput(result4.counts)}`);
     console.log(`Earnings: $${result4.profit}`);
+    if (result4.allSolutions && result4.allSolutions.length > 0) {
+      console.log("Solutions");
+      result4.allSolutions.forEach((sol, idx) => {
+        console.log(`${idx + 1}. ${formatOutput(sol)}`);
+      });
+    } else {
+      console.log(`Output: ${formatOutput(result4.counts)}`);
+    }
     console.log();
   }
 }
