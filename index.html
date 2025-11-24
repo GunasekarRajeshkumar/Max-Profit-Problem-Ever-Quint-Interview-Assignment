@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Max Profit Problem - Ever Quint</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        padding: 40px;
+      }
+
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 10px;
+        font-size: 2.5em;
+      }
+
+      .subtitle {
+        text-align: center;
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 1.1em;
+      }
+
+      .info-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+      }
+
+      .info-section h3 {
+        color: #667eea;
+        margin-bottom: 15px;
+      }
+
+      .building-types {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+      }
+
+      .building-card {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+      }
+
+      .building-card strong {
+        color: #667eea;
+        font-size: 1.2em;
+      }
+
+      .input-section {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+      }
+
+      .input-group {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      input[type="number"] {
+        flex: 1;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 1em;
+        transition: border-color 0.3s;
+      }
+
+      input[type="number"]:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      button {
+        padding: 12px 30px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1em;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        font-weight: 600;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      .btn-secondary {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      }
+
+      .results-section {
+        margin-top: 30px;
+      }
+
+      .result-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        animation: fadeIn 0.5s;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .result-header {
+        font-size: 1.3em;
+        font-weight: 600;
+        margin-bottom: 10px;
+      }
+
+      .result-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+      }
+
+      .result-item {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 10px;
+        border-radius: 5px;
+      }
+
+      .result-item strong {
+        display: block;
+        margin-bottom: 5px;
+      }
+
+      .default-tests {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+      }
+
+      .test-card {
+        background: white;
+        border: 2px solid #667eea;
+        padding: 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .test-card:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+      }
+
+      .test-card strong {
+        color: #667eea;
+        display: block;
+        margin-bottom: 5px;
+      }
+
+      .test-card:hover strong {
+        color: white;
+      }
+
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 15px;
+        border-left: 4px solid #dc3545;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🏗️ Max Profit Problem</h1>
+      <p class="subtitle">
+        Find the optimal combination of buildings to maximize profit
+      </p>
+
+      <div class="info-section">
+        <h3>Building Types</h3>
+        <div class="building-types">
+          <div class="building-card">
+            <strong>Theatre (T)</strong>
+            <div>Build Time: 5 units</div>
+            <div>Earnings: $1,500/unit</div>
+          </div>
+          <div class="building-card">
+            <strong>Pub (P)</strong>
+            <div>Build Time: 4 units</div>
+            <div>Earnings: $1,000/unit</div>
+          </div>
+          <div class="building-card">
+            <strong>Commercial Park (C)</strong>
+            <div>Build Time: 10 units</div>
+            <div>Earnings: $2,000/unit</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-section">
+        <h3 style="color: #667eea; margin-bottom: 15px">
+          Calculate Maximum Profit
+        </h3>
+        <div class="input-group">
+          <input
+            type="number"
+            id="timeInput"
+            placeholder="Enter time units (e.g., 49)"
+            min="0"
+          />
+          <button onclick="calculateProfit()">Calculate</button>
+          <button class="btn-secondary" onclick="clearResults()">
+            Clear Results
+          </button>
+        </div>
+      </div>
+
+      <div class="results-section" id="resultsSection"></div>
+
+      <div class="info-section" style="margin-top: 30px">
+        <h3>Default Test Cases</h3>
+        <p style="margin-bottom: 15px; color: #666">
+          Click on any test case to calculate:
+        </p>
+        <div class="default-tests">
+          <div class="test-card" onclick="runTest(7)">
+            <strong>Test Case 1</strong>
+            <div>Time Unit: 7</div>
+            <div style="font-size: 0.9em; color: #666; margin-top: 5px">
+              Expected: T: 1 P: 0 C: 0
+            </div>
+          </div>
+          <div class="test-card" onclick="runTest(8)">
+            <strong>Test Case 2</strong>
+            <div>Time Unit: 8</div>
+            <div style="font-size: 0.9em; color: #666; margin-top: 5px">
+              Expected: T: 1 P: 0 C: 0
+            </div>
+          </div>
+          <div class="test-card" onclick="runTest(13)">
+            <strong>Test Case 3</strong>
+            <div>Time Unit: 13</div>
+            <div style="font-size: 0.9em; color: #666; margin-top: 5px">
+              Expected: T: 2 P: 0 C: 0
+            </div>
+          </div>
+          <div class="test-card" onclick="runTest(49)">
+            <strong>Test Case 4</strong>
+            <div>Time Unit: 49</div>
+            <div style="font-size: 0.9em; color: #666; margin-top: 5px">
+              Expected: T: 8 P: 2 C: 0
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const BUILDING_TYPES = {
+        THEATRE: { time: 5, earnings: 1500, name: "T" },
+        PUB: { time: 4, earnings: 1000, name: "P" },
+        COMMERCIAL: { time: 10, earnings: 2000, name: "C" },
+      };
+
+      function countBuildings(sequence) {
+        const counts = { T: 0, P: 0, C: 0 };
+        for (const building of sequence) {
+          counts[building.name]++;
+        }
+        return counts;
+      }
+
+      function findMaxProfit(n) {
+        const buildings = [
+          BUILDING_TYPES.THEATRE,
+          BUILDING_TYPES.PUB,
+          BUILDING_TYPES.COMMERCIAL,
+        ];
+
+        const dp = new Array(n + 1).fill(null).map(() => ({
+          profit: -1,
+          sequence: [],
+        }));
+
+        dp[0] = { profit: 0, sequence: [] };
+
+        for (let time = 0; time <= n; time++) {
+          if (dp[time].profit < 0) {
+            continue;
+          }
+
+          for (const building of buildings) {
+            const buildTime = building.time;
+            const finishTime = time + buildTime;
+
+            if (finishTime <= n) {
+              const operationalTime = n - finishTime;
+              const buildingProfit = operationalTime * building.earnings;
+              const totalProfit = dp[time].profit + buildingProfit;
+
+              if (
+                dp[finishTime].profit < 0 ||
+                totalProfit > dp[finishTime].profit
+              ) {
+                dp[finishTime] = {
+                  profit: totalProfit,
+                  sequence: [...dp[time].sequence, building],
+                };
+              }
+            }
+          }
+        }
+
+        let maxProfit = -1;
+        let bestSequence = [];
+        let bestFinishTime = -1;
+
+        for (let i = 0; i <= n; i++) {
+          if (dp[i].profit > maxProfit) {
+            maxProfit = dp[i].profit;
+          }
+        }
+
+        for (let i = n - 1; i >= 0; i--) {
+          if (dp[i].profit === maxProfit && maxProfit >= 0) {
+            bestSequence = dp[i].sequence;
+            bestFinishTime = i;
+            break;
+          }
+        }
+
+        if (bestFinishTime < 0 && dp[n].profit === maxProfit) {
+          bestSequence = dp[n].sequence;
+          bestFinishTime = n;
+        }
+
+        if (maxProfit < 0) {
+          maxProfit = 0;
+        }
+
+        const counts = countBuildings(bestSequence);
+
+        return {
+          profit: maxProfit,
+          counts: counts,
+          sequence: bestSequence,
+        };
+      }
+
+      function formatOutput(counts) {
+        return `T: ${counts.T} P: ${counts.P} C: ${counts.C}`;
+      }
+
+      function calculateProfit() {
+        const input = document.getElementById("timeInput");
+        const timeUnit = parseInt(input.value);
+
+        if (isNaN(timeUnit) || timeUnit < 0) {
+          showError("Please enter a valid positive number for time units.");
+          return;
+        }
+
+        const result = findMaxProfit(timeUnit);
+        displayResult(timeUnit, result);
+        input.value = "";
+      }
+
+      function runTest(timeUnit) {
+        document.getElementById("timeInput").value = timeUnit;
+        const result = findMaxProfit(timeUnit);
+        displayResult(timeUnit, result);
+      }
+
+      function displayResult(timeUnit, result) {
+        const resultsSection = document.getElementById("resultsSection");
+
+        const resultCard = document.createElement("div");
+        resultCard.className = "result-card";
+        resultCard.innerHTML = `
+                <div class="result-header">Time Unit: ${timeUnit}</div>
+                <div class="result-details">
+                    <div class="result-item">
+                        <strong>Output</strong>
+                        ${formatOutput(result.counts)}
+                    </div>
+                    <div class="result-item">
+                        <strong>Earnings</strong>
+                        $${result.profit.toLocaleString()}
+                    </div>
+                    <div class="result-item">
+                        <strong>Theatres</strong>
+                        ${result.counts.T}
+                    </div>
+                    <div class="result-item">
+                        <strong>Pubs</strong>
+                        ${result.counts.P}
+                    </div>
+                    <div class="result-item">
+                        <strong>Commercial Parks</strong>
+                        ${result.counts.C}
+                    </div>
+                </div>
+            `;
+
+        resultsSection.insertBefore(resultCard, resultsSection.firstChild);
+      }
+
+      function showError(message) {
+        const resultsSection = document.getElementById("resultsSection");
+        const errorDiv = document.createElement("div");
+        errorDiv.className = "error";
+        errorDiv.textContent = message;
+        resultsSection.insertBefore(errorDiv, resultsSection.firstChild);
+
+        setTimeout(() => {
+          errorDiv.remove();
+        }, 5000);
+      }
+
+      function clearResults() {
+        document.getElementById("resultsSection").innerHTML = "";
+      }
+
+      // Allow Enter key to calculate
+      document
+        .getElementById("timeInput")
+        .addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            calculateProfit();
+          }
+        });
+
+      // Run default test cases on page load
+      window.addEventListener("load", function () {
+        setTimeout(() => {
+          runTest(7);
+          setTimeout(() => runTest(8), 100);
+          setTimeout(() => runTest(13), 200);
+          setTimeout(() => runTest(49), 300);
+        }, 500);
+      });
+    </script>
+  </body>
+</html>
